@@ -1,0 +1,14 @@
+Django
+djangorestframework
+Pillow
+serpapi
+fashion-clip
+insightface
+opencv-python
+numpy
+torch
+streamlit
+requests
+python-dotenv
+onnxruntime
+pandas

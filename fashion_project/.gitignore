@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+*.log
+db.sqlite3
+
+# Environment variables
+.env
+
+# AI Model and Dataset Files
+dataset/
+stylist_app/pkl/
+
+# IDE files
+.idea/
+.vscode/
