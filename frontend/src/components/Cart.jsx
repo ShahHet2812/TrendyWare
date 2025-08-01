@@ -5,6 +5,7 @@ import axios from "axios";
 export default function Cart({ cartItems, setCartItems }) {
   const navigate = useNavigate();
 
+  // This function now only updates the local state
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity <= 0) {
       setCartItems(cartItems.filter((item) => item.id !== id));
@@ -17,6 +18,7 @@ export default function Cart({ cartItems, setCartItems }) {
     }
   };
 
+  // This function now only updates the local state
   const removeItem = (id) => {
     setCartItems(cartItems.filter((item) => item.id !== id));
   };
@@ -29,7 +31,6 @@ export default function Cart({ cartItems, setCartItems }) {
   const tax = subtotal * 0.12;
   const total = subtotal + shipping + tax;
 
-  // --- THIS IS THE FIX ---
   // This function now calls the correct endpoint on the server.
   const handleCheckout = async () => {
     const token = localStorage.getItem("token");
@@ -45,7 +46,7 @@ export default function Cart({ cartItems, setCartItems }) {
     }
 
     try {
-      // The endpoint now matches the one defined in the updated server.js
+      // This endpoint matches the one defined in your server.js
       await axios.post(
         "http://localhost:8000/api/orders/create",
         {

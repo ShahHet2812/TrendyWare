@@ -10,18 +10,14 @@ import LoginPage from "./components/LoginPage.jsx";
 import FashionFest from "./components/FashionFest.jsx";
 import AIStylist from "./components/AIStylist.jsx";
 import Cart from "./components/Cart.jsx";
-// import AIStylist from "./components/AIStylist.jsx"; // 👈 Uncomment this line after you create the component
 
-// Main App component to hold state
 function App() {
-  // State for authentication, initialized from localStorage
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
-  // State for the shopping cart
   const [cartItems, setCartItems] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
 
-  // This effect syncs the auth state if the token is changed in another tab
   useEffect(() => {
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem("token"));
@@ -39,12 +35,17 @@ function App() {
         setIsAuthenticated={setIsAuthenticated}
         cartItems={cartItems}
       />
-
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
           path="/shop"
-          element={<Shop cartItems={cartItems} setCartItems={setCartItems} />}
+          element={
+            <Shop
+              recommendations={recommendations}
+              cartItems={cartItems}
+              setCartItems={setCartItems}
+            />
+          }
         />
         <Route
           path="/login"
@@ -55,10 +56,11 @@ function App() {
           path="/cart"
           element={<Cart cartItems={cartItems} setCartItems={setCartItems} />}
         />
-        {/* 👇 This route was causing the error. Uncomment it after creating and importing the AIStylist component. */}
-        <Route path="/ai-stylist" element={<AIStylist />} /> 
+        <Route
+          path="/ai-stylist"
+          element={<AIStylist setRecommendations={setRecommendations} />}
+        />
       </Routes>
-
       <Footer />
     </BrowserRouter>
   );

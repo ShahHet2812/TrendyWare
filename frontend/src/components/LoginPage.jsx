@@ -13,7 +13,6 @@ export default function LoginPage({ setIsAuthenticated }) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (localStorage.getItem("token")) {
       navigate("/");
@@ -24,9 +23,9 @@ export default function LoginPage({ setIsAuthenticated }) {
     e.preventDefault();
     setError("");
 
-    // --- THIS IS THE FIX ---
-    // The endpoint is simplified to match the server's expected routes (/login, /signup).
     const endpoint = isLogin ? "/login" : "/signup";
+    // CORRECTED: Pointing to your Node.js server on port 8000
+    const baseUrl = "http://localhost:8000";
 
     if (!email || !password || (!isLogin && !name)) {
       return setError("Please fill in all required fields.");
@@ -38,24 +37,18 @@ export default function LoginPage({ setIsAuthenticated }) {
     const payload = isLogin ? { email, password } : { name, email, password };
 
     try {
-      // The request is now sent to http://localhost:8000/login or http://localhost:8000/signup
-      const res = await axios.post(`http://localhost:8000${endpoint}`, payload);
+      const res = await axios.post(`${baseUrl}${endpoint}`, payload);
 
       if (isLogin) {
         localStorage.setItem("token", res.data.token);
         setIsAuthenticated(true);
         navigate("/shop");
       } else {
-        alert(res.data.message); // "User created successfully..."
-        setIsLogin(true); // Switch to login view
+        alert(res.data.message);
+        setIsLogin(true);
       }
     } catch (err) {
-      console.error("Auth failed:", err);
-      const message =
-        err.response?.data?.message ||
-        (err.code === "ERR_NETWORK"
-          ? "Cannot connect to server."
-          : "Something went wrong.");
+      const message = err.response?.data?.message || "Something went wrong.";
       setError(message);
     }
   };
