@@ -10,6 +10,7 @@ import LoginPage from "./components/LoginPage.jsx";
 import FashionFest from "./components/FashionFest.jsx";
 import AIStylist from "./components/AIStylist.jsx";
 import Cart from "./components/Cart.jsx";
+import Admin from "./components/Admin.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -60,6 +61,7 @@ function App() {
           path="/ai-stylist"
           element={<AIStylist setRecommendations={setRecommendations} />}
         />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
       <Footer />
     </BrowserRouter>
