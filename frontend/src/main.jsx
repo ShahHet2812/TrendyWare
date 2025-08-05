@@ -1,6 +1,6 @@
 import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "./components/Home.jsx";
 import Shop from "./components/Shop.jsx";
@@ -16,12 +16,16 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
   const [cartItems, setCartItems] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem("token"));
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      setIsAuthenticated(!!token);
+      setUserRole(role);
     };
     window.addEventListener("storage", handleStorageChange);
     return () => {
@@ -29,41 +33,70 @@ function App() {
     };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    setIsAuthenticated(false);
+    setUserRole(null);
+  };
+
   return (
     <BrowserRouter>
-      <Navbar
-        isAuthenticated={isAuthenticated}
-        setIsAuthenticated={setIsAuthenticated}
-        cartItems={cartItems}
-      />
+      {userRole !== "admin" && (
+        <Navbar
+          isAuthenticated={isAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
+          cartItems={cartItems}
+          handleLogout={handleLogout}
+        />
+      )}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/shop"
-          element={
-            <Shop
-              recommendations={recommendations}
-              cartItems={cartItems}
-              setCartItems={setCartItems}
+        {userRole === "admin" ? (
+          <>
+            <Route
+              path="/admin"
+              element={<Admin handleLogout={handleLogout} />}
             />
-          }
-        />
-        <Route
-          path="/login"
-          element={<LoginPage setIsAuthenticated={setIsAuthenticated} />}
-        />
-        <Route path="/fashion-fest" element={<FashionFest />} />
-        <Route
-          path="/cart"
-          element={<Cart cartItems={cartItems} setCartItems={setCartItems} />}
-        />
-        <Route
-          path="/ai-stylist"
-          element={<AIStylist setRecommendations={setRecommendations} />}
-        />
-        <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<Navigate to="/admin" />} />
+          </>
+        ) : (
+          <>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/shop"
+              element={
+                <Shop
+                  recommendations={recommendations}
+                  cartItems={cartItems}
+                  setCartItems={setCartItems}
+                />
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <LoginPage
+                  setIsAuthenticated={setIsAuthenticated}
+                  setUserRole={setUserRole}
+                />
+              }
+            />
+            <Route path="/fashion-fest" element={<FashionFest />} />
+            <Route
+              path="/cart"
+              element={
+                <Cart cartItems={cartItems} setCartItems={setCartItems} />
+              }
+            />
+            <Route
+              path="/ai-stylist"
+              element={<AIStylist setRecommendations={setRecommendations} />}
+            />
+            <Route path="/admin" element={<Navigate to="/login" />} />
+          </>
+        )}
       </Routes>
-      <Footer />
+      {userRole !== "admin" && <Footer />}
     </BrowserRouter>
   );
 }

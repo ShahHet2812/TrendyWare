@@ -5,14 +5,9 @@ export default function Navbar({
   isAuthenticated,
   setIsAuthenticated,
   cartItems,
+  handleLogout,
 }) {
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Use token instead of isLoggedIn
-    setIsAuthenticated(false);
-    navigate("/login");
-  };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -47,7 +42,9 @@ export default function Navbar({
                 Fashion Fest
               </Link>
             </li>
-            <li className="nav-item"> {/* <-- ADD THIS LINK */}
+            <li className="nav-item">
+              {" "}
+              {/* <-- ADD THIS LINK */}
               <Link className="nav-link" to="/ai-stylist">
                 AI Stylist
               </Link>

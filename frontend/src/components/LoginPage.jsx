@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import axios from "axios";
 
-export default function LoginPage({ setIsAuthenticated }) {
+export default function LoginPage({ setIsAuthenticated, setUserRole }) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
@@ -11,6 +11,7 @@ export default function LoginPage({ setIsAuthenticated }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [role, setRole] = useState("user"); // 'user' or 'admin'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,26 +24,31 @@ export default function LoginPage({ setIsAuthenticated }) {
     e.preventDefault();
     setError("");
 
-    const endpoint = isLogin ? "/login" : "/signup";
-    // CORRECTED: Pointing to your Node.js server on port 8000
-    const baseUrl = "http://localhost:8000";
+    const endpoint = isLogin ? `/login` : `/signup`;
+    const baseUrl = `http://localhost:8000${role === "admin" ? "/admin" : ""}`;
 
-    if (!email || !password || (!isLogin && !name)) {
+    if (!email || !password || (!isLogin && role === "user" && !name)) {
       return setError("Please fill in all required fields.");
     }
     if (!isLogin && password !== confirmPassword) {
       return setError("Passwords do not match.");
     }
 
-    const payload = isLogin ? { email, password } : { name, email, password };
+    const payload = isLogin
+      ? { email, password }
+      : role === "user"
+      ? { name, email, password }
+      : { email, password };
 
     try {
       const res = await axios.post(`${baseUrl}${endpoint}`, payload);
 
       if (isLogin) {
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("role", res.data.role);
         setIsAuthenticated(true);
-        navigate("/shop");
+        setUserRole(res.data.role);
+        navigate(res.data.role === "admin" ? "/admin" : "/shop");
       } else {
         alert(res.data.message);
         setIsLogin(true);
@@ -63,6 +69,24 @@ export default function LoginPage({ setIsAuthenticated }) {
           <p className="text-muted mt-2">Welcome to premium fashion</p>
         </div>
         <div className="card shadow rounded-4 p-4">
+          <div className="btn-group mb-4">
+            <button
+              className={`btn ${
+                role === "user" ? "btn-danger" : "btn-outline-secondary"
+              }`}
+              onClick={() => setRole("user")}
+            >
+              User
+            </button>
+            <button
+              className={`btn ${
+                role === "admin" ? "btn-danger" : "btn-outline-secondary"
+              }`}
+              onClick={() => setRole("admin")}
+            >
+              Admin
+            </button>
+          </div>
           <div className="btn-group w-100 mb-4" role="group">
             <button
               type="button"
@@ -89,7 +113,7 @@ export default function LoginPage({ setIsAuthenticated }) {
             </div>
           )}
           <form onSubmit={handleSubmit}>
-            {!isLogin && (
+            {!isLogin && role === "user" && (
               <div className="mb-3">
                 <label className="form-label">Full Name</label>
                 <div className="input-group">

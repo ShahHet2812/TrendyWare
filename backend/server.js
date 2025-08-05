@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
+// New Admin Schema
+const adminSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+const Admin = mongoose.model("Admin", adminSchema);
+
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -92,6 +99,47 @@ const authMiddleware = (req, res, next) => {
     next();
   });
 };
+
+// --- Admin Auth Routes ---
+app.post("/admin/signup", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const adminExists = await Admin.findOne({ email });
+    if (adminExists) {
+      return res
+        .status(400)
+        .json({ message: "Admin with this email already exists" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newAdmin = new Admin({ email, password: hashedPassword });
+    await newAdmin.save();
+    res
+      .status(201)
+      .json({ message: "Admin created successfully. Please log in." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error during admin signup" });
+  }
+});
+
+app.post("/admin/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const admin = await Admin.findOne({ email });
+    if (!admin) return res.status(400).json({ message: "Invalid credentials" });
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.json({ message: "Admin login successful", token, role: "admin" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error during admin login" });
+  }
+});
+
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -121,10 +169,22 @@ app.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
-    res.json({ message: "Login successful", token });
+    const token = jwt.sign({ id: user._id, role: "user" }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.json({ message: "Login successful", token, role: "user" });
   } catch (err) {
     res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+// New route to get admin-added products
+app.get("/api/admin-products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Server error fetching admin products" });
   }
 });
 
@@ -268,7 +328,9 @@ app.post("/api/admin/products", async (req, res) => {
 
 app.put("/api/admin/products/:id", async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!updated) return res.status(404).json({ message: "Product not found" });
     res.json(updated);
   } catch (err) {
@@ -285,6 +347,8 @@ app.delete("/api/admin/products/:id", async (req, res) => {
     res.status(500).json({ message: "Error deleting product" });
   }
 });
+
+// Fests - Admin
 app.get("/api/admin/fests", async (req, res) => {
   try {
     const fests = await Fest.find().sort({ startDate: 1 });
@@ -298,7 +362,9 @@ app.post("/api/admin/fests", async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
     if (new Date(startDate) > new Date(endDate)) {
-      return res.status(400).json({ message: "Start date cannot be after end date" });
+      return res
+        .status(400)
+        .json({ message: "Start date cannot be after end date" });
     }
     const newFest = new Fest(req.body); // no createdBy field
     const saved = await newFest.save();
@@ -310,7 +376,9 @@ app.post("/api/admin/fests", async (req, res) => {
 
 app.put("/api/admin/fests/:id", async (req, res) => {
   try {
-    const updated = await Fest.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Fest.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!updated) return res.status(404).json({ message: "Fest not found" });
     res.json(updated);
   } catch (err) {
@@ -327,8 +395,6 @@ app.delete("/api/admin/fests/:id", async (req, res) => {
     res.status(500).json({ message: "Error deleting fest" });
   }
 });
-
-
 
 app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
   try {
@@ -356,6 +422,8 @@ app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error while upvoting" });
   }
 });
+
+// -- Order Routes (Unaffected) --
 app.post("/api/orders/create", authMiddleware, async (req, res) => {
   const { products, totalAmount } = req.body;
   const userId = req.user.id;
