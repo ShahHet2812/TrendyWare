@@ -72,7 +72,6 @@ const festSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
@@ -93,10 +92,6 @@ const authMiddleware = (req, res, next) => {
     next();
   });
 };
-
-// --- API Routes ---
-
-// -- Authentication Routes (Unaffected) --
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -252,6 +247,89 @@ app.delete("/api/fests/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.get("/api/admin/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching products" });
+  }
+});
+
+app.post("/api/admin/products", async (req, res) => {
+  try {
+    const newProduct = new Product(req.body);
+    const saved = await newProduct.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+app.put("/api/admin/products/:id", async (req, res) => {
+  try {
+    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: "Product not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+app.delete("/api/admin/products/:id", async (req, res) => {
+  try {
+    const deleted = await Product.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Product not found" });
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting product" });
+  }
+});
+app.get("/api/admin/fests", async (req, res) => {
+  try {
+    const fests = await Fest.find().sort({ startDate: 1 });
+    res.json(fests);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching fests" });
+  }
+});
+
+app.post("/api/admin/fests", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    if (new Date(startDate) > new Date(endDate)) {
+      return res.status(400).json({ message: "Start date cannot be after end date" });
+    }
+    const newFest = new Fest(req.body); // no createdBy field
+    const saved = await newFest.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+app.put("/api/admin/fests/:id", async (req, res) => {
+  try {
+    const updated = await Fest.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: "Fest not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+app.delete("/api/admin/fests/:id", async (req, res) => {
+  try {
+    const deleted = await Fest.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Fest not found" });
+    res.json({ message: "Fest deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting fest" });
+  }
+});
+
+
+
 app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
   try {
     const fest = await Fest.findById(req.params.id);
@@ -278,8 +356,6 @@ app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error while upvoting" });
   }
 });
-
-// -- Order Routes (Unaffected) --
 app.post("/api/orders/create", authMiddleware, async (req, res) => {
   const { products, totalAmount } = req.body;
   const userId = req.user.id;

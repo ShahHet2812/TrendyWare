@@ -128,31 +128,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Testimonials */}
-      <section className="py-5 bg-white">
-        <div className="container text-center mb-5">
-          <h2 className="fw-light mb-3">Voices from Our Indian Customers</h2>
-          <p className="text-muted">Authentic feedback from across Bharat</p>
-        </div>
-        <div className="container">
-          <div className="row g-4">
-            {testimonials.map((testimonial, i) => (
-              <div key={i} className="col-md-4">
-                <div className="bg-light p-4 h-100 rounded text-center">
-                  <div className="mb-3">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} size={20} className="text-warning" fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="fst-italic text-muted">"{testimonial.text}"</p>
-                  <h6 className="mt-3">{testimonial.name}</h6>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

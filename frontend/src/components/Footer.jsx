@@ -5,24 +5,15 @@ export default function Footer(){
         <div className="container">
           <div className="row g-4">
             <div className="col-md-3">
-              <h5 className="text-danger">Elegance India</h5>
-              <p className="text-white-50">India's destination for modern and ethnic fashion trends.</p>
+              <h5 className="text-danger">TrendyWare</h5>
+              <p className="text-white-50">India's destination for modern fashion trends.</p>
             </div>
             <div className="col-md-3">
               <h6 className="fw-bold">Quick Links</h6>
               <ul className="list-unstyled text-white-50">
                 <li><Link className="text-white-50 text-decoration-none" to="/shop">Shop</Link></li>
                 <li><Link className="text-white-50 text-decoration-none" to="/fashion-fest">Fashion Fest</Link></li>
-                <li><Link className="text-white-50 text-decoration-none" to="/ai-model">AI Stylist</Link></li>
                 <li><Link className="text-white-50 text-decoration-none" to="/ai-stylist">AI Stylist</Link></li>
-              </ul>
-            </div>
-            <div className="col-md-3">
-              <h6 className="fw-bold">Customer Support</h6>
-              <ul className="list-unstyled text-white-50">
-                <li><a href="#" className="text-white-50 text-decoration-none">Contact Us</a></li>
-                <li><a href="#" className="text-white-50 text-decoration-none">Size Guide</a></li>
-                <li><a href="#" className="text-white-50 text-decoration-none">Returns & Refunds</a></li>
               </ul>
             </div>
             <div className="col-md-3">
@@ -35,7 +26,7 @@ export default function Footer(){
             </div>
           </div>
           <div className="border-top border-secondary mt-4 pt-3 text-center text-white-50">
-            &copy; 2025 Elegance India. All rights reserved.
+            &copy; 2025 TrendyWare. All rights reserved.
           </div>
         </div>
       </footer>

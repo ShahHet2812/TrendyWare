@@ -3,8 +3,7 @@ import axios from 'axios';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 
 // Define the base URL for your API, now pointing to port 8000.
-const API_BASE_URL = 'http://localhost:8000/api';
-
+const API_BASE_URL = 'http://localhost:8000/api/admin';
 const getApiEndpoint = (tab) => {
   switch (tab) {
     case 'products':
