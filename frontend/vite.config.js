@@ -7,18 +7,10 @@ export default defineConfig({
   server: {
     // This is the proxy that will fix the CORS error.
     proxy: {
-      // Any request from the frontend that starts with '/api' OR '/login' OR '/signup'
-      // will be forwarded to your Node.js server running on port 5000.
+      // ONLY requests starting with /api will be forwarded to the backend.
+      // Client-side routes like /login, /shop, etc., will be handled by React Router.
       "/api": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
-      },
-      "/login": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
-      },
-      "/signup": {
-        target: "http://localhost:5000",
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },

@@ -155,60 +155,6 @@ export default function FashionFestPage() {
                     ))}
                 </div>
             </div>
-
-            {/* Add Fest Floating Button */}
-            <button className="btn btn-danger rounded-circle position-fixed bottom-0 end-0 m-4 p-0 d-flex align-items-center justify-content-center" onClick={() => { setIsEditing(false); setShowForm(true); }} style={{ width: "56px", height: "56px" }}>
-                <Plus size={28} />
-            </button>
-
-
-            {/* Add/Edit Fest Modal */}
-            {showForm && (
-                <div className="modal fade show d-block" tabIndex="-1">
-                    <div className="modal-dialog modal-lg modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">{isEditing ? "Edit Fashion Fest" : "List Your Fashion Fest"}</h5>
-                                <button type="button" className="btn-close" onClick={resetForm} />
-                            </div>
-                            <div className="modal-body">
-                                {/* **NEW**: Display Backend Error Message Here */}
-                                {error && <div className="alert alert-danger">{error}</div>}
-                                <form onSubmit={handleSubmit}>
-                                    {/* Form fields remain the same */}
-                                    {/* ... all your input fields ... */}
-                                     <div className="mb-3">
-                                        <label className="form-label"><FileText size={16} className="me-1" />Fest Name</label>
-                                        <input type="text" className="form-control" name="name" value={formData.name} onChange={handleInputChange} required />
-                                    </div>
-                                     <div className="row">
-                                        <div className="col-md-6 mb-3"><label className="form-label"><MapPin size={16} className="me-1" />Location</label><input type="text" className="form-control" name="location" value={formData.location} onChange={handleInputChange} required /></div>
-                                        <div className="col-md-6 mb-3"><label className="form-label"><Building2 size={16} className="me-1" />City</label><input type="text" className="form-control" name="city" value={formData.city} onChange={handleInputChange} required /></div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="col-md-6 mb-3"><label className="form-label"><Calendar size={16} className="me-1" />Start Date</label><input type="date" className="form-control" name="startDate" value={formData.startDate} onChange={handleInputChange} required /></div>
-                                        <div className="col-md-6 mb-3"><label className="form-label"><Calendar size={16} className="me-1" />End Date</label><input type="date" className="form-control" name="endDate" value={formData.endDate} onChange={handleInputChange} required /></div>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label"><Hash size={16} className="me-1" />GST Number</label>
-                                        <input type="text" className="form-control" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label"><FileText size={16} className="me-1" />Description</label>
-                                        <textarea className="form-control" rows="4" name="description" value={formData.description} onChange={handleInputChange} required />
-                                    </div>
-
-                                    <div className="modal-footer">
-                                        <button type="button" className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>
-                                        <button type="submit" className="btn btn-danger">{isEditing ? "Update Fest" : "List Fest"}</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
              {/* Fest Detail Modal */}
             {selectedFest && !showForm && (
                 <div className="modal fade show d-block" tabIndex="-1">
@@ -232,10 +178,6 @@ export default function FashionFestPage() {
                                  </div>
                              </div>
                              <div className="modal-footer justify-content-between">
-                                 <div>
-                                     <button className="btn btn-outline-primary me-2" onClick={() => handleEdit(selectedFest)}><Edit size={16} className="me-1"/> Edit</button>
-                                     <button className="btn btn-outline-danger"><Trash2 size={16} className="me-1"/> Delete</button>
-                                 </div>
                                  <button className="btn btn-secondary" onClick={() => setSelectedFest(null)}>Close</button>
                              </div>
                          </div>

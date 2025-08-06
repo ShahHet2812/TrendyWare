@@ -19,9 +19,9 @@ export default function Footer(){
             <div className="col-md-3">
               <h6 className="fw-bold">Connect With Us</h6>
               <ul className="list-unstyled text-white-50">
-                <li><a href="#" className="text-white-50 text-decoration-none">Instagram</a></li>
-                <li><a href="#" className="text-white-50 text-decoration-none">Facebook</a></li>
-                <li><a href="#" className="text-white-50 text-decoration-none">Twitter</a></li>
+                <li><a href="https://www.instagram.com/het._.shah._?igsh=MW16dHh4Zmc2ZTZ1cA%3D%3D&utm_source=qr" className="text-white-50 text-decoration-none">Instagram</a></li>
+                <li><a href="https://www.linkedin.com/in/het-shah-7264472b3" className="text-white-50 text-decoration-none">LinkedIn</a></li>
+                <li><a href="https://x.com/SHAHHet94920284" className="text-white-50 text-decoration-none">Twitter</a></li>
               </ul>
             </div>
           </div>
