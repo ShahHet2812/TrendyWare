@@ -174,7 +174,6 @@ export default function FashionFestPage() {
                                      <button className="btn btn-primary d-flex align-items-center me-3" onClick={() => handleUpvote(selectedFest._id)}>
                                         <ThumbsUp size={16} className="me-2" /> {selectedFest.upvotes.length} Interested
                                     </button>
-                                     <p className="text-muted mb-0">Organized by: {selectedFest.createdBy?.name || 'Unknown'}</p>
                                  </div>
                              </div>
                              <div className="modal-footer justify-content-between">
