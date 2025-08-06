@@ -124,11 +124,10 @@ export default function FashionFestPage() {
 
     return (
         <div className="bg-light min-vh-100">
-            {/* Header and Fest Grid... (No changes here) */}
             <div className="py-5 text-white" style={{ background: "linear-gradient(90deg, #6f42c1, #d63384)" }}>
                 <div className="container text-center">
-                    <h1 className="display-4 fw-bold">Fashion Fests in Your City</h1>
-                    <p className="lead">Discover and participate in fashion events near you</p>
+                    <h1 className="display-4 fw-bold">Fashion Fests</h1>
+                    <p className="lead">Discover and participate in fashion events in India</p>
                 </div>
             </div>
 

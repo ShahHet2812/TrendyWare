@@ -80,17 +80,6 @@ export default function Shop({
           <div className="card-body d-flex flex-column">
             <p className="text-muted small mb-1">{productCategory}</p>
             <h5 className="card-title">{productName}</h5>
-            <div className="d-flex align-items-center mb-2">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`me-1 text-warning`}
-                  size={14}
-                  fill={"currentColor"}
-                />
-              ))}
-              <span className="ms-2 text-muted small">(Recommended)</span>
-            </div>
             <div className="d-flex justify-content-between align-items-center mt-auto">
               <div>
                 <span className="fw-bold text-danger fs-5 me-2">
@@ -127,24 +116,6 @@ export default function Shop({
       </header>
       <div className="bg-white border-top border-bottom py-3">
         <div className="container d-flex justify-content-end align-items-center gap-3">
-          <div className="d-flex gap-2">
-            <button
-              className={`btn ${
-                viewMode === "grid" ? "btn-danger" : "btn-outline-secondary"
-              }`}
-              onClick={() => setViewMode("grid")}
-            >
-              <Grid size={16} />
-            </button>
-            <button
-              className={`btn ${
-                viewMode === "list" ? "btn-danger" : "btn-outline-secondary"
-              }`}
-              onClick={() => setViewMode("list")}
-            >
-              <List size={16} />
-            </button>
-          </div>
         </div>
       </div>
 

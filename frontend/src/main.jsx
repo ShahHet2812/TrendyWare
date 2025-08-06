@@ -11,6 +11,7 @@ import FashionFest from "./components/FashionFest.jsx";
 import AIStylist from "./components/AIStylist.jsx";
 import Cart from "./components/Cart.jsx";
 import Admin from "./components/Admin.jsx";
+import NotFound from "./components/NotFound.jsx"; // Import the NotFound component
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -57,11 +58,12 @@ function App() {
               path="/admin"
               element={<Admin handleLogout={handleLogout} />}
             />
-            <Route path="*" element={<Navigate to="/admin" />} />
+            {/* For admins, any other path redirects to NotFound */}
+            <Route path="*" element={<NotFound />} />
           </>
         ) : (
           <>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home setCartItems={setCartItems} />} />
             <Route
               path="/shop"
               element={
@@ -92,7 +94,13 @@ function App() {
               path="/ai-stylist"
               element={<AIStylist setRecommendations={setRecommendations} />}
             />
+            {/*
+              If a non-admin tries to access /admin, redirect to login.
+              This maintains the original security logic.
+            */}
             <Route path="/admin" element={<Navigate to="/login" />} />
+            {/* For any other path, show the NotFound page */}
+            <Route path="*" element={<NotFound />} />
           </>
         )}
       </Routes>

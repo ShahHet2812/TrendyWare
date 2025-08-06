@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+// bcrypt is removed
 const jwt = require("jsonwebtoken");
 
 const app = express();
@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// New Admin Schema
 const adminSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -110,8 +109,8 @@ app.post("/admin/signup", async (req, res) => {
         .status(400)
         .json({ message: "Admin with this email already exists" });
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const newAdmin = new Admin({ email, password: hashedPassword });
+    // Storing password directly without hashing
+    const newAdmin = new Admin({ email, password });
     await newAdmin.save();
     res
       .status(201)
@@ -127,7 +126,8 @@ app.post("/admin/login", async (req, res) => {
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    // Direct password comparison
+    const isMatch = password === admin.password;
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
@@ -149,8 +149,8 @@ app.post("/signup", async (req, res) => {
         .status(400)
         .json({ message: "User with this email already exists" });
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
-    await new User({ name, email, password: hashedPassword }).save();
+    // Storing password directly without hashing
+    await new User({ name, email, password }).save();
     res
       .status(201)
       .json({ message: "User created successfully. Please log in." });
@@ -165,7 +165,8 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Direct password comparison
+    const isMatch = password === user.password;
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
@@ -177,8 +178,6 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error during login" });
   }
 });
-
-// New route to get admin-added products
 app.get("/api/admin-products", async (req, res) => {
   try {
     const products = await Product.find();
@@ -187,8 +186,6 @@ app.get("/api/admin-products", async (req, res) => {
     res.status(500).json({ message: "Server error fetching admin products" });
   }
 });
-
-// -- Product Management Routes (Unaffected) --
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find();
