@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-// bcrypt is removed
 const jwt = require("jsonwebtoken");
 
 const app = express();
@@ -14,7 +13,9 @@ app.use(express.json());
 
 // --- MongoDB Connection ---
 mongoose
-  .connect("mongodb+srv://shahhet28122004:shahhet28@trendyware.quuxjzz.mongodb.net/?retryWrites=true&w=majority&appName=trendyware")
+  .connect(
+    "mongodb+srv://shahhet28122004:shahhet28@trendyware.quuxjzz.mongodb.net/?retryWrites=true&w=majority&appName=trendyware"
+  )
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
@@ -85,6 +86,43 @@ const festSchema = new mongoose.Schema(
 );
 const Fest = mongoose.model("Fest", festSchema);
 
+// --- Review Schema (FIXED) ---
+const reviewSchema = new mongoose.Schema(
+  {
+    // This is the fix: Changed 'ObjectId' to 'String' to allow different ID formats.
+    productId: {
+      type: String,
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    username: { type: String, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+const Review = mongoose.model("Review", reviewSchema);
+
+const complaintSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    subject: { type: String, required: true },
+    message: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["New", "In Progress", "Resolved"],
+      default: "New",
+    },
+  },
+  { timestamps: true }
+);
+const Complaint = mongoose.model("Complaint", complaintSchema);
+
 // --- Authentication Middleware ---
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -109,7 +147,6 @@ app.post("/admin/signup", async (req, res) => {
         .status(400)
         .json({ message: "Admin with this email already exists" });
     }
-    // Storing password directly without hashing
     const newAdmin = new Admin({ email, password });
     await newAdmin.save();
     res
@@ -126,7 +163,6 @@ app.post("/admin/login", async (req, res) => {
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ message: "Invalid credentials" });
 
-    // Direct password comparison
     const isMatch = password === admin.password;
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
@@ -140,6 +176,7 @@ app.post("/admin/login", async (req, res) => {
   }
 });
 
+// --- User Auth Routes ---
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -149,7 +186,6 @@ app.post("/signup", async (req, res) => {
         .status(400)
         .json({ message: "User with this email already exists" });
     }
-    // Storing password directly without hashing
     await new User({ name, email, password }).save();
     res
       .status(201)
@@ -164,8 +200,6 @@ app.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
-    // Direct password comparison
     const isMatch = password === user.password;
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
@@ -178,6 +212,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error during login" });
   }
 });
+
+// --- Product Routes ---
 app.get("/api/admin-products", async (req, res) => {
   try {
     const products = await Product.find();
@@ -228,7 +264,7 @@ app.delete("/api/products/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// -- Fest Management Routes (Refined and Fully Implemented) --
+// --- Fest Management Routes ---
 app.get("/api/fests", async (req, res) => {
   try {
     const fests = await Fest.find()
@@ -242,7 +278,6 @@ app.get("/api/fests", async (req, res) => {
 
 app.post("/api/fests", authMiddleware, async (req, res) => {
   const { startDate, endDate } = req.body;
-
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -304,6 +339,34 @@ app.delete("/api/fests/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
+  try {
+    const fest = await Fest.findById(req.params.id);
+    if (!fest) return res.status(404).json({ message: "Fest not found" });
+
+    const userId = req.user.id;
+    const upvoteIndex = fest.upvotes.findIndex(
+      (id) => id.toString() === userId
+    );
+
+    if (upvoteIndex > -1) {
+      fest.upvotes.splice(upvoteIndex, 1);
+    } else {
+      fest.upvotes.push(userId);
+    }
+
+    await fest.save();
+    const populatedFest = await Fest.findById(fest._id).populate(
+      "createdBy",
+      "name"
+    );
+    res.json(populatedFest);
+  } catch (err) {
+    res.status(500).json({ message: "Server error while upvoting" });
+  }
+});
+
+// --- Admin Product & Fest Routes ---
 app.get("/api/admin/products", async (req, res) => {
   try {
     const products = await Product.find();
@@ -345,7 +408,6 @@ app.delete("/api/admin/products/:id", async (req, res) => {
   }
 });
 
-// Fests - Admin
 app.get("/api/admin/fests", async (req, res) => {
   try {
     const fests = await Fest.find().sort({ startDate: 1 });
@@ -363,7 +425,7 @@ app.post("/api/admin/fests", async (req, res) => {
         .status(400)
         .json({ message: "Start date cannot be after end date" });
     }
-    const newFest = new Fest(req.body); // no createdBy field
+    const newFest = new Fest(req.body);
     const saved = await newFest.save();
     res.status(201).json(saved);
   } catch (err) {
@@ -393,34 +455,7 @@ app.delete("/api/admin/fests/:id", async (req, res) => {
   }
 });
 
-app.post("/api/fests/:id/upvote", authMiddleware, async (req, res) => {
-  try {
-    const fest = await Fest.findById(req.params.id);
-    if (!fest) return res.status(404).json({ message: "Fest not found" });
-
-    const userId = req.user.id;
-    const upvoteIndex = fest.upvotes.findIndex(
-      (id) => id.toString() === userId
-    );
-
-    if (upvoteIndex > -1) {
-      fest.upvotes.splice(upvoteIndex, 1);
-    } else {
-      fest.upvotes.push(userId);
-    }
-
-    await fest.save();
-    const populatedFest = await Fest.findById(fest._id).populate(
-      "createdBy",
-      "name"
-    );
-    res.json(populatedFest);
-  } catch (err) {
-    res.status(500).json({ message: "Server error while upvoting" });
-  }
-});
-
-// -- Order Routes (Unaffected) --
+// --- Order Routes ---
 app.post("/api/orders/create", authMiddleware, async (req, res) => {
   const { products, totalAmount } = req.body;
   const userId = req.user.id;
@@ -438,6 +473,85 @@ app.post("/api/orders/create", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Order creation error:", err);
     res.status(500).json({ message: "Server error while placing order." });
+  }
+});
+
+// --- Review Endpoints ---
+app.get("/api/products/:productId/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find({ productId: req.params.productId }).sort(
+      {
+        createdAt: -1,
+      }
+    );
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: "Server error fetching reviews" });
+  }
+});
+
+app.post(
+  "/api/products/:productId/reviews",
+  authMiddleware,
+  async (req, res) => {
+    const { rating, comment } = req.body;
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const newReview = new Review({
+        productId: req.params.productId,
+        userId: req.user.id,
+        username: user.name,
+        rating,
+        comment,
+      });
+      const savedReview = await newReview.save();
+      res.status(201).json(savedReview);
+    } catch (err) {
+      res
+        .status(400)
+        .json({ message: "Failed to post review: " + err.message });
+    }
+  }
+);
+
+// --- Complaint Endpoints ---
+app.post("/api/complaints", async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    const newComplaint = new Complaint({ name, email, subject, message });
+    await newComplaint.save();
+    res.status(201).json({ message: "Complaint submitted successfully!" });
+  } catch (err) {
+    res.status(400).json({ message: "Submission failed: " + err.message });
+  }
+});
+
+app.get("/api/admin/complaints", authMiddleware, async (req, res) => {
+  try {
+    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching complaints" });
+  }
+});
+
+app.put("/api/admin/complaints/:id", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updated = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!updated)
+      return res.status(404).json({ message: "Complaint not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 

@@ -11,8 +11,14 @@ import FashionFest from "./components/FashionFest.jsx";
 import AIStylist from "./components/AIStylist.jsx";
 import Cart from "./components/Cart.jsx";
 import Admin from "./components/Admin.jsx";
-import NotFound from "./components/NotFound.jsx"; // Import the NotFound component
-import PaymentPage from "./components/PaymentPage.jsx";
+import NotFound from "./components/NotFound.jsx";
+import HelpWidget from "./components/HelpWidget.jsx";
+
+// Import the new pages
+import TermsOfService from "./components/TermsOfService.jsx";
+import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
+import ContactUs from "./components/ContactUs.jsx";
+import FAQs from "./components/FAQs.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -59,8 +65,7 @@ function App() {
               path="/admin"
               element={<Admin handleLogout={handleLogout} />}
             />
-            {/* For admins, any other path redirects to NotFound */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/admin" />} />
           </>
         ) : (
           <>
@@ -95,18 +100,24 @@ function App() {
               path="/ai-stylist"
               element={<AIStylist setRecommendations={setRecommendations} />}
             />
-            <Route path="/payment" element={<PaymentPage />} />
-            {/*
-              If a non-admin tries to access /admin, redirect to login.
-              This maintains the original security logic.
-            */}
+
+            {/* Add routes for the new pages */}
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/faqs" element={<FAQs />} />
+
             <Route path="/admin" element={<Navigate to="/login" />} />
-            {/* For any other path, show the NotFound page */}
             <Route path="*" element={<NotFound />} />
           </>
         )}
       </Routes>
-      {userRole !== "admin" && <Footer />}
+      {userRole !== "admin" && (
+        <>
+          <HelpWidget />
+          <Footer />
+        </>
+      )}
     </BrowserRouter>
   );
 }

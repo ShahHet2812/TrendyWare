@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const PaymentPage = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -22,7 +23,7 @@ const PaymentPage = () => {
     const res = await loadRazorpayScript();
 
     if (!res) {
-      alert('Razorpay SDK failed to load. Are you online?');
+      setError('Failed to load payment gateway. Please disable any ad-blockers and try again.');
       return;
     }
 
@@ -73,9 +74,15 @@ const PaymentPage = () => {
         textAlign: 'center'
       }}>
         <h1 style={{ fontFamily: "'Lora', serif", marginBottom: '2rem' }}>Processing Payment...</h1>
-        <p style={{ fontFamily: "'Inter', sans-serif", color: '#666', marginBottom: '2rem' }}>
-          Please wait while we redirect you to the payment gateway.
-        </p>
+        {error ? (
+          <p style={{ fontFamily: "'Inter', sans-serif", color: 'red', marginBottom: '2rem' }}>
+            {error}
+          </p>
+        ) : (
+          <p style={{ fontFamily: "'Inter', sans-serif", color: '#666', marginBottom: '2rem' }}>
+            Please wait while we redirect you to the payment gateway.
+          </p>
+        )}
       </div>
     </div>
   );
