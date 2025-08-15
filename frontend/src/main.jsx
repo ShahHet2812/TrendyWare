@@ -12,6 +12,7 @@ import AIStylist from "./components/AIStylist.jsx";
 import Cart from "./components/Cart.jsx";
 import Admin from "./components/Admin.jsx";
 import NotFound from "./components/NotFound.jsx"; // Import the NotFound component
+import PaymentPage from "./components/PaymentPage.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -94,6 +95,7 @@ function App() {
               path="/ai-stylist"
               element={<AIStylist setRecommendations={setRecommendations} />}
             />
+            <Route path="/payment" element={<PaymentPage />} />
             {/*
               If a non-admin tries to access /admin, redirect to login.
               This maintains the original security logic.

@@ -33,21 +33,7 @@ export default function Cart({ cartItems, setCartItems }) {
       navigate("/login");
       return;
     }
-    try {
-      await axios.post(
-        "http://localhost:8000/api/orders/create",
-        {
-          products: cartItems.map(item => ({ productId: item.id, name: item.name, quantity: item.quantity, price: item.price })),
-          totalAmount: total,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Purchase successful!");
-      setCartItems([]);
-      navigate("/shop");
-    } catch (err) {
-      alert(err.response?.data?.message || "Checkout failed.");
-    }
+    navigate('/payment');
   };
 
   if (cartItems.length === 0) {
