@@ -5,7 +5,6 @@ import axios from "axios";
 export default function Cart({ cartItems, setCartItems }) {
   const navigate = useNavigate();
 
-  // This function now only updates the local state
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity <= 0) {
       setCartItems(cartItems.filter((item) => item.id !== id));
@@ -18,189 +17,147 @@ export default function Cart({ cartItems, setCartItems }) {
     }
   };
 
-  // This function now only updates the local state
   const removeItem = (id) => {
     setCartItems(cartItems.filter((item) => item.id !== id));
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 5000 ? 0 : 99.0;
   const tax = subtotal * 0.12;
   const total = subtotal + shipping + tax;
 
-  // This function now calls the correct endpoint on the server.
   const handleCheckout = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please log in to proceed with your order.");
+      alert("Please log in to proceed.");
       navigate("/login");
       return;
     }
-
-    if (cartItems.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-
     try {
-      // This endpoint matches the one defined in your server.js
       await axios.post(
         "http://localhost:8000/api/orders/create",
         {
-          products: cartItems.map((item) => ({
-            productId: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-          })),
+          products: cartItems.map(item => ({ productId: item.id, name: item.name, quantity: item.quantity, price: item.price })),
           totalAmount: total,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Purchase successful! Your order has been placed.");
+      alert("Purchase successful!");
       setCartItems([]);
       navigate("/shop");
     } catch (err) {
-      console.error("Checkout error:", err);
-      alert(
-        err.response?.data?.message || "Checkout failed. Please try again."
-      );
+      alert(err.response?.data?.message || "Checkout failed.");
     }
   };
 
+  if (cartItems.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '6rem 2rem', backgroundColor: '#F8F8F8', minHeight: 'calc(100vh - 80px)' }}>
+        <ShoppingBag size={64} color="#ccc" />
+        <h1 style={{ fontFamily: "'Lora', serif", marginTop: '1.5rem' }}>Your Bag is Empty</h1>
+        <p style={{ fontFamily: "'Inter', sans-serif", color: '#666', marginBottom: '2rem' }}>Looks like you haven’t added anything to your bag yet.</p>
+        <Link to="/shop" style={{
+          fontFamily: "'Inter', sans-serif",
+          textDecoration: 'none',
+          color: 'white',
+          backgroundColor: '#111',
+          padding: '12px 24px',
+          borderRadius: '50px',
+        }}>
+          Start Shopping
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-light min-vh-100">
-      <div className="container py-5">
-        <div className="mb-4">
-          <Link
-            to="/shop"
-            className="d-inline-flex align-items-center text-muted text-decoration-none"
-          >
-            <ArrowLeft className="me-2" /> Continue Shopping
-          </Link>
+    <div style={{ backgroundColor: '#F8F8F8', minHeight: 'calc(100vh - 80px)', padding: '4rem 2rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '3rem' }}>
+        <div>
+          <h1 style={{ fontFamily: "'Lora', serif", marginBottom: '2rem' }}>My Bag</h1>
+          <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            {cartItems.map((item, index) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                updateQuantity={updateQuantity}
+                removeItem={removeItem}
+                isLast={index === cartItems.length - 1}
+              />
+            ))}
+          </div>
         </div>
-        <h1 className="display-5 fw-light mb-4">Shopping Cart</h1>
-        {cartItems.length === 0 ? (
-          <div className="text-center py-5">
-            <ShoppingBag size={96} className="text-secondary mb-3" />
-            <h2 className="h4 text-secondary mb-3">Your cart is empty</h2>
-            <Link to="/shop" className="btn btn-danger px-4 py-2 rounded-pill">
-              Start Shopping
-            </Link>
-          </div>
-        ) : (
-          <div className="row g-5">
-            <div className="col-lg-8">
-              <div className="card shadow-sm rounded-4">
-                <ul className="list-group list-group-flush">
-                  {cartItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="list-group-item d-flex align-items-center gap-4 p-3"
-                    >
-                      <img
-                        src={
-                          item.image ||
-                          `https://placehold.co/90x120/eee/ccc?text=Item`
-                        }
-                        alt={item.name}
-                        className="rounded"
-                        style={{
-                          width: "90px",
-                          height: "120px",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <div className="flex-grow-1">
-                        <h6 className="mb-1">{item.name}</h6>
-                        <strong className="text-danger">
-                          ₹{item.price.toFixed(2)}
-                        </strong>
-                      </div>
-                      <div className="d-flex align-items-center">
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                        >
-                          <Minus size={16} />
-                        </button>
-                        <span className="px-3 fw-semibold">
-                          {item.quantity}
-                        </span>
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                      <button
-                        className="btn btn-outline-danger btn-sm ms-2"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="col-lg-4">
-              <div
-                className="card shadow-sm rounded-4 sticky-top"
-                style={{ top: "6rem" }}
-              >
-                <div className="card-body">
-                  <h5 className="card-title mb-4">Order Summary</h5>
-                  <ul className="list-unstyled mb-4">
-                    <li className="d-flex justify-content-between">
-                      <span>Subtotal</span>
-                      <strong>₹{subtotal.toFixed(2)}</strong>
-                    </li>
-                    <li className="d-flex justify-content-between">
-                      <span>Shipping</span>
-                      <strong>
-                        {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
-                      </strong>
-                    </li>
-                    <li className="d-flex justify-content-between">
-                      <span>Tax (12%)</span>
-                      <strong>₹{tax.toFixed(2)}</strong>
-                    </li>
-                    <hr />
-                    <li className="d-flex justify-content-between fs-5 fw-bold">
-                      <span>Total</span>
-                      <span className="text-danger">₹{total.toFixed(2)}</span>
-                    </li>
-                  </ul>
-                  {shipping > 0 && subtotal > 0 && (
-                    <div className="alert alert-warning small text-center">
-                      Add ₹{(5000 - subtotal).toFixed(2)} more for free
-                      shipping!
-                    </div>
-                  )}
-                  <button
-                    onClick={handleCheckout}
-                    className="btn btn-danger w-100 py-3 mb-3 rounded-pill"
-                  >
-                    Proceed to Checkout
-                  </button>
-                  <p className="text-muted text-center small mb-0">
-                    Secure checkout with SSL encryption
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} handleCheckout={handleCheckout} />
       </div>
     </div>
   );
 }
+
+const CartItem = ({ item, updateQuantity, removeItem, isLast }) => (
+  <div style={{
+    display: 'flex',
+    padding: '1.5rem',
+    gap: '1.5rem',
+    borderBottom: isLast ? 'none' : '1px solid #eee'
+  }}>
+    <img src={item.image || `https://placehold.co/90x120/eee/ccc?text=Item`} alt={item.name}
+      style={{ width: '100px', height: '130px', objectFit: 'cover', borderRadius: '4px' }}
+    />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div>
+        <h5 style={{ fontFamily: "'Lora', serif", margin: '0 0 0.5rem 0' }}>{item.name}</h5>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 'bold', color: '#C19A6B', margin: 0 }}>₹{item.price.toFixed(2)}</p>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: '50px' }}>
+          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer' }}><Minus size={16} /></button>
+          <span style={{ padding: '0 8px', fontFamily: "'Inter', sans-serif" }}>{item.quantity}</span>
+          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer' }}><Plus size={16} /></button>
+        </div>
+        <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}><Trash2 size={18} /></button>
+      </div>
+    </div>
+  </div>
+);
+
+const OrderSummary = ({ subtotal, shipping, tax, total, handleCheckout }) => (
+  <div style={{ position: 'sticky', top: '120px' }}>
+    <h2 style={{ fontFamily: "'Lora', serif", marginBottom: '2rem' }}>Order Summary</h2>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      padding: '2rem',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+      fontFamily: "'Inter', sans-serif"
+    }}>
+      <SummaryRow label="Subtotal" value={`₹${subtotal.toFixed(2)}`} />
+      <SummaryRow label="Shipping" value={shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`} />
+      <SummaryRow label="Tax (12%)" value={`₹${tax.toFixed(2)}`} />
+      <hr style={{ margin: '1.5rem 0', border: 'none', borderTop: '1px solid #eee' }} />
+      <SummaryRow label="Total" value={`₹${total.toFixed(2)}`} isTotal />
+      <button
+        onClick={handleCheckout}
+        style={{
+          width: '100%',
+          padding: '12px',
+          marginTop: '2rem',
+          fontSize: '1rem',
+          fontWeight: 500,
+          color: 'white',
+          backgroundColor: '#111',
+          border: 'none',
+          borderRadius: '50px',
+          cursor: 'pointer'
+        }}>
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+);
+
+const SummaryRow = ({ label, value, isTotal = false }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontWeight: isTotal ? 'bold' : 'normal', fontSize: isTotal ? '1.2rem' : '1rem' }}>
+    <span>{label}</span>
+    <span style={{ color: isTotal ? '#C19A6B' : '#111' }}>{value}</span>
+  </div>
+);

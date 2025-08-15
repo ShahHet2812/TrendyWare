@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Upload } from "lucide-react"; // Optional: for a nice icon
+import { Upload, Sparkles } from "lucide-react";
 
 export default function AIStylist({ setRecommendations }) {
   const [file, setFile] = useState(null);
@@ -14,21 +14,17 @@ export default function AIStylist({ setRecommendations }) {
   const handleFileChange = (event) => {
     setError("");
     const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
+    if (selectedFile) setFile(selectedFile);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
-    setLoading(true);
-
     if (!file) {
       setError("Please upload an image.");
-      setLoading(false);
       return;
     }
+    setLoading(true);
+    setError("");
 
     const formData = new FormData();
     formData.append("image", file);
@@ -36,115 +32,113 @@ export default function AIStylist({ setRecommendations }) {
     formData.append("usage", usage);
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8001/api/stylist/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
+      const response = await axios.post("http://127.0.0.1:8001/api/stylist/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (response.data && response.data.recommendations) {
         setRecommendations(response.data.recommendations);
         navigate("/shop");
       } else {
-        setError("Failed to get valid recommendations from the server.");
+        setError("Failed to get valid recommendations.");
       }
     } catch (err) {
-      console.error("Full error object:", err);
-
-      if (err.response) {
-        if (err.response.status === 500) {
-          setError("There was a problem on our server. Please try again later.");
-        } else {
-          setError(`Error: ${err.response.status} - ${err.response.statusText}`);
-        }
-        console.error("Server responded with:", err.response.data);
-      } else if (err.request) {
-        setError("Could not connect to the server. Please check your network connection.");
-      } else {
-        setError("An unexpected error occurred while sending the request.");
-      }
+      setError("An error occurred. Please try again later.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8 col-lg-6">
-          <div className="text-center mb-5">
-            <h2 className="fw-light">AI Fashion Stylist</h2>
-            <p className="text-muted">Upload your photo and let our AI find the perfect outfits for you.</p>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: 'calc(100vh - 80px)',
+      padding: '2rem',
+      backgroundColor: '#F8F8F8'
+    }}>
+      <div style={{
+        maxWidth: '500px',
+        width: '100%',
+        textAlign: 'center'
+      }}>
+        <Sparkles size={48} color="#C19A6B" style={{ marginBottom: '1rem' }} />
+        <h1 style={{ fontFamily: "'Lora', serif", fontSize: '2.5rem', marginBottom: '0.5rem' }}>AI Stylist</h1>
+        <p style={{ fontFamily: "'Inter', sans-serif", color: '#666', marginBottom: '3rem' }}>
+          Upload an image to discover your personalized style recommendations.
+        </p>
+
+        <form onSubmit={handleSubmit} style={{
+          backgroundColor: 'white',
+          padding: '2.5rem',
+          borderRadius: '8px',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+        }}>
+          <label htmlFor="file-upload" style={{
+            display: 'block',
+            padding: '2rem',
+            border: '2px dashed #ddd',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            marginBottom: '1.5rem',
+            transition: 'border-color 0.3s ease, background-color 0.3s ease'
+          }}
+          onMouseOver={e => { e.currentTarget.style.borderColor = '#C19A6B'; e.currentTarget.style.backgroundColor = '#fafafa'; }}
+          onMouseOut={e => { e.currentTarget.style.borderColor = '#ddd'; e.currentTarget.style.backgroundColor = 'white'; }}
+          >
+            <Upload size={32} color="#999" style={{ margin: '0 auto 0.5rem' }} />
+            <span style={{ fontFamily: "'Inter', sans-serif", color: '#666' }}>
+              {file ? file.name : 'Click to upload an image'}
+            </span>
+            <input
+              type="file"
+              id="file-upload"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+              accept="image/*"
+            />
+          </label>
+
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <Select id="season-select" label="Season" value={season} onChange={setSeason} options={['Summer', 'Winter', 'Fall', 'Spring']} />
+            <Select id="usage-select" label="Occasion" value={usage} onChange={setUsage} options={['Casual', 'Formal', 'Sports', 'Party', 'Work', 'Ethnic']} />
           </div>
 
-          <div className="card shadow-sm">
-            <div className="card-body p-5">
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="file-upload" className="form-label">Upload Image</label>
-                  <div className="input-group">
-                      <input
-                        type="file"
-                        id="file-upload"
-                        className="form-control"
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        aria-describedby="file-upload-help"
-                      />
-                  </div>
-                   <div id="file-upload-help" className="form-text">
-                    {file ? `Selected: ${file.name}` : "Please choose a photo."}
-                   </div>
-                </div>
-
-                <div className="row g-3 mb-4">
-                  <div className="col">
-                    <label htmlFor="season-select" className="form-label">Season</label>
-                    <select id="season-select" className="form-select" value={season} onChange={(e) => setSeason(e.target.value)}>
-                      <option>Summer</option>
-                      <option>Winter</option>
-                      <option>Fall</option>
-                      <option>Spring</option>
-                    </select>
-                  </div>
-                  <div className="col">
-                    <label htmlFor="usage-select" className="form-label">Occasion</label>
-                    <select id="usage-select" className="form-select" value={usage} onChange={(e) => setUsage(e.target.value)}>
-                      <option>Casual</option>
-                      <option>Formal</option>
-                      <option>Sports</option>
-                      <option>Party</option>
-                      <option>Work</option>
-                      <option>Ethnic</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button type="submit" className="btn btn-danger btn-lg w-100 rounded-pill" disabled={loading || !file}>
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                      <span className="ms-2">Analyzing...</span>
-                    </>
-                  ) : (
-                    "Get Recommendations"
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-          
-          {error && (
-            <div className="alert alert-danger mt-4" role="alert">
-              {error}
-            </div>
-          )}
-        </div>
+          <button type="submit" disabled={loading || !file} style={{
+            width: '100%',
+            padding: '12px',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: '1rem',
+            fontWeight: 500,
+            color: 'white',
+            backgroundColor: loading || !file ? '#ccc' : '#111',
+            border: 'none',
+            borderRadius: '50px',
+            cursor: loading || !file ? 'not-allowed' : 'pointer',
+            transition: 'background-color 0.3s ease'
+          }}>
+            {loading ? 'Analyzing...' : 'Get Recommendations'}
+          </button>
+          {error && <p style={{ color: '#D8000C', marginTop: '1rem', fontSize: '0.9rem' }}>{error}</p>}
+        </form>
       </div>
     </div>
   );
 }
+
+const Select = ({ id, label, value, onChange, options }) => (
+  <div style={{ flex: 1, textAlign: 'left' }}>
+    <label htmlFor={id} style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>{label}</label>
+    <select id={id} value={value} onChange={e => onChange(e.target.value)} style={{
+      width: '100%',
+      padding: '10px',
+      borderRadius: '6px',
+      border: '1px solid #ddd',
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '1rem'
+    }}>
+      {options.map(opt => <option key={opt}>{opt}</option>)}
+    </select>
+  </div>
+);

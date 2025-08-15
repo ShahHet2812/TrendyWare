@@ -24,13 +24,8 @@ except Exception as e:
     logger.error(f"❌ Failed to initialize AI models: {e}", exc_info=True)
     face_app = None
     fclip_model = None
-
-# --- Load Product Metadata ---
 logger.info("Loading product metadata from CSVs...")
 try:
-    # --- CORRECTED FILE PATHS ---
-    # Build absolute paths from the Django project's base directory.
-    # This is the key fix for your 'Product metadata is not available' error.
     styles_path = os.path.join(settings.BASE_DIR, "dataset", "styles.csv")
     prices_path = os.path.join(settings.BASE_DIR, "dataset", "clothing_prices.csv")
 
@@ -88,7 +83,7 @@ def detect_skin_tone(image_bgr):
 
     mean_bgr = np.mean(valid_pixels, axis=0).astype(np.uint8)
     hsv_pixel = cv2.cvtColor(np.uint8([[mean_bgr]]), cv2.COLOR_BGR2HSV)[0][0]
-    value = hsv_pixel[2] # Brightness value
+    value = hsv_pixel[2]
 
     if value > 200: return "very fair"
     elif 160 < value <= 200: return "fair"
@@ -122,7 +117,6 @@ def recommend_outfit(prompt, features, catalog, top_k=25):
     text_features = fclip_model.encode_text([prompt], batch_size=1)
     image_features = torch.tensor(features, dtype=torch.float32)
     
-    # Calculate cosine similarity
     similarity_scores = image_features @ text_features[0].T
     top_indices = torch.topk(similarity_scores, k=top_k).indices
     
@@ -134,7 +128,6 @@ def get_recommendations(uploaded_file, season, usage):
     if not face_app or not fclip_model:
         raise ValueError("AI models are not available.")
     if metadata_df is None:
-        # This error is now unlikely to happen with the corrected paths
         raise ValueError("Product metadata is not available. Check server logs for loading errors.")
 
     try:
@@ -152,7 +145,6 @@ def get_recommendations(uploaded_file, season, usage):
         prompt = f"{usage} outfit for a {age_group} {gender.lower()} with {skin_tone} skin tone for the {season} season"
         logger.info(f"Generated Prompt: {prompt}")
 
-        # Load cached image features and catalog data
         features_path = os.path.join(settings.BASE_DIR, "stylist_app", "pkl", "cached_image_features.pkl")
         catalog_path = os.path.join(settings.BASE_DIR, "stylist_app", "pkl", "cached_catalog.pkl")
 
@@ -166,7 +158,6 @@ def get_recommendations(uploaded_file, season, usage):
         results = []
         for path in outfit_paths:
             try:
-                # Extract the product ID from the image filename
                 image_id = int(os.path.basename(path).split(".")[0])
                 product_details = metadata_df.loc[image_id]
                 results.append(
@@ -178,7 +169,6 @@ def get_recommendations(uploaded_file, season, usage):
                     }
                 )
             except (KeyError, ValueError):
-                # Safely skip items that are recommended but not in the metadata
                 logger.warning(f"Could not find metadata for recommended image ID: {os.path.basename(path)}")
                 continue
 
@@ -186,5 +176,4 @@ def get_recommendations(uploaded_file, season, usage):
 
     except Exception as e:
         logger.error(f"An unexpected error occurred in get_recommendations: {e}", exc_info=True)
-        # Re-raise the exception to let Django's error handling create a 500 response
         raise e

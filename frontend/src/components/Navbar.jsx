@@ -1,76 +1,82 @@
-import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import { ShoppingBag, User, LogOut } from "lucide-react";
 
-export default function Navbar({
-  isAuthenticated,
-  setIsAuthenticated,
-  cartItems,
-  handleLogout,
-}) {
-  const navigate = useNavigate();
-
+export default function Navbar({ isAuthenticated, cartItems, handleLogout }) {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  const linkStyle = {
+    fontFamily: "'Inter', sans-serif",
+    textDecoration: 'none',
+    color: '#333',
+    padding: '8px 12px',
+    borderRadius: '6px',
+    transition: 'background-color 0.3s ease',
+  };
+
+  const activeLinkStyle = {
+    ...linkStyle,
+    backgroundColor: '#f0f0f0',
+  };
+
   return (
-    <nav className="navbar navbar-expand-md navbar-light bg-white shadow sticky-top">
-      <div className="container">
-        <Link className="navbar-brand text-danger fw-bold" to="/">
-          TrendyWare
+    <nav style={{
+      padding: '1.5rem 2rem',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      backdropFilter: 'blur(10px)',
+      borderBottom: '1px solid #eee',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between'
+    }}>
+      <Link to="/" style={{
+        fontFamily: "'Lora', serif",
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        textDecoration: 'none',
+        color: '#111'
+      }}>
+        TrendyWare
+      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <NavLink to="/shop" style={({ isActive }) => isActive ? activeLinkStyle : linkStyle}>Shop</NavLink>
+        <NavLink to="/fashion-fest" style={({ isActive }) => isActive ? activeLinkStyle : linkStyle}>Fashion Fest</NavLink>
+        <NavLink to="/ai-stylist" style={({ isActive }) => isActive ? activeLinkStyle : linkStyle}>AI Stylist</NavLink>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <Link to="/cart" style={{ position: 'relative', color: '#333' }}>
+          <ShoppingBag size={22} />
+          {totalItems > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-8px',
+              backgroundColor: '#C19A6B',
+              color: 'white',
+              borderRadius: '50%',
+              width: '18px',
+              height: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: 'bold'
+            }}>
+              {totalItems}
+            </span>
+          )}
         </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span className="navbar-toggler-icon" />
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto me-3">
-            <li className="nav-item">
-              <Link className="nav-link" to="/shop">
-                Shop
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/fashion-fest">
-                Fashion Fest
-              </Link>
-            </li>
-            <li className="nav-item">
-              {" "}
-              {/* <-- ADD THIS LINK */}
-              <Link className="nav-link" to="/ai-stylist">
-                AI Stylist
-              </Link>
-            </li>
-          </ul>
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/cart" className="position-relative">
-              <ShoppingBag className="text-secondary" />
-              {totalItems > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-            {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="btn btn-outline-danger px-3 rounded-pill"
-              >
-                Sign Out
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="btn btn-danger text-white px-3 rounded-pill"
-              >
-                Login
-              </Link>
-            )}
-          </div>
-        </div>
+        {isAuthenticated ? (
+          <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333' }}>
+            <LogOut size={22} />
+          </button>
+        ) : (
+          <Link to="/login" style={{ color: '#333' }}>
+            <User size={22} />
+          </Link>
+        )}
       </div>
     </nav>
   );
