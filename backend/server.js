@@ -14,7 +14,7 @@ app.use(express.json());
 
 // --- MongoDB Connection ---
 mongoose
-  .connect("mongodb://localhost:27017/trendyware")
+  .connect("mongodb+srv://shahhet28122004:shahhet28@trendyware.quuxjzz.mongodb.net/?retryWrites=true&w=majority&appName=trendyware")
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
