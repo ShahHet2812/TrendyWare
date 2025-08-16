@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import axios from "axios";
+import OtpVerification from "./OtpVerification";
 
 export default function LoginPage({ setIsAuthenticated, setUserRole }) {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState("user");
   const navigate = useNavigate();
 
+  const [showOtpForm, setShowOtpForm] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   useEffect(() => {
     if (localStorage.getItem("token")) navigate("/");
   }, [navigate]);
+
+  const handleOtpSent = (email) => {
+    setSignupEmail(email);
+    setShowOtpForm(true);
+  };
+
+  const handleVerificationSuccess = (message) => {
+    setSuccessMessage(message);
+    setShowOtpForm(false);
+    setIsLogin(true);
+    setTimeout(() => setSuccessMessage(""), 4000);
+  };
 
   return (
     <div
@@ -33,77 +50,107 @@ export default function LoginPage({ setIsAuthenticated, setUserRole }) {
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-        <h1
-          style={{
-            fontFamily: "'Lora', serif",
-            textAlign: "center",
-            marginBottom: "0.5rem",
-          }}
-        >
-          {isLogin ? "Welcome Back" : "Create Account"}
-        </h1>
-        <p
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            color: "#666",
-            textAlign: "center",
-            marginBottom: "2rem",
-          }}
-        >
-          {isLogin ? "Sign in to continue" : "Join the TrendyWare family"}
-        </p>
-
-        <div
-          style={{
-            marginBottom: "1.5rem",
-            display: "flex",
-            border: "1px solid #eee",
-            borderRadius: "50px",
-            padding: "4px",
-          }}
-        >
-          <TabButton
-            text="User"
-            isActive={role === "user"}
-            onClick={() => setRole("user")}
+        {showOtpForm ? (
+          <OtpVerification
+            email={signupEmail}
+            role={role}
+            onVerificationSuccess={handleVerificationSuccess}
           />
-          <TabButton
-            text="Admin"
-            isActive={role === "admin"}
-            onClick={() => setRole("admin")}
-          />
-        </div>
+        ) : (
+          <>
+            <h1
+              style={{
+                fontFamily: "'Lora', serif",
+                textAlign: "center",
+                marginBottom: "0.5rem",
+              }}
+            >
+              {isLogin ? "Welcome Back" : "Create Account"}
+            </h1>
+            <p
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                color: "#666",
+                textAlign: "center",
+                marginBottom: "2rem",
+              }}
+            >
+              {isLogin ? "Sign in to continue" : "Join the TrendyWare family"}
+            </p>
+            {successMessage && (
+              <p
+                style={{
+                  color: "green",
+                  textAlign: "center",
+                  background: "#e6fffa",
+                  padding: "10px",
+                  borderRadius: "4px",
+                  marginBottom: "1rem",
+                }}
+              >
+                {successMessage}
+              </p>
+            )}
 
-        <AuthForm
-          isLogin={isLogin}
-          role={role}
-          setIsAuthenticated={setIsAuthenticated}
-          setUserRole={setUserRole}
-          navigate={navigate}
-        />
+            <div
+              style={{
+                marginBottom: "1.5rem",
+                display: "flex",
+                border: "1px solid #eee",
+                borderRadius: "50px",
+                padding: "4px",
+              }}
+            >
+              <TabButton
+                text="User"
+                isActive={role === "user"}
+                onClick={() => setRole("user")}
+              />
+              <TabButton
+                text="Admin"
+                isActive={role === "admin"}
+                onClick={() => setRole("admin")}
+              />
+            </div>
 
-        <p
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            textAlign: "center",
-            marginTop: "1.5rem",
-            fontSize: "0.9rem",
-          }}
-        >
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#C19A6B",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            {isLogin ? "Sign Up" : "Log In"}
-          </button>
-        </p>
+            <AuthForm
+              isLogin={isLogin}
+              role={role}
+              setIsAuthenticated={setIsAuthenticated}
+              setUserRole={setUserRole}
+              navigate={navigate}
+              onOtpSent={handleOtpSent}
+            />
+
+            <p
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                textAlign: "center",
+                marginTop: "1.5rem",
+                fontSize: "0.9rem",
+              }}
+            >
+              {isLogin
+                ? "Don't have an account? "
+                : "Already have an account? "}
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setSuccessMessage("");
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#C19A6B",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {isLogin ? "Sign Up" : "Log In"}
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -115,6 +162,7 @@ const AuthForm = ({
   setIsAuthenticated,
   setUserRole,
   navigate,
+  onOtpSent,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
@@ -122,16 +170,20 @@ const AuthForm = ({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     const endpoint = isLogin ? `/login` : `/signup`;
     const baseUrl = `http://localhost:8000${role === "admin" ? "/admin" : ""}`;
 
-    if (!isLogin && password !== confirmPassword)
+    if (!isLogin && password !== confirmPassword) {
+      setLoading(false);
       return setError("Passwords do not match.");
+    }
 
     const payload = isLogin
       ? { email, password }
@@ -148,11 +200,12 @@ const AuthForm = ({
         setUserRole(res.data.role);
         navigate(res.data.role === "admin" ? "/admin" : "/shop");
       } else {
-        alert(res.data.message);
-        window.location.reload(); // Quick way to switch to login form after signup
+        onOtpSent(email);
       }
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -215,6 +268,7 @@ const AuthForm = ({
 
       <button
         type="submit"
+        disabled={loading}
         style={{
           width: "100%",
           padding: "12px",
@@ -223,28 +277,27 @@ const AuthForm = ({
           fontSize: "1rem",
           fontWeight: 500,
           color: "white",
-          backgroundColor: "#111",
+          backgroundColor: loading ? "#ccc" : "#111",
           border: "none",
           borderRadius: "50px",
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
           transition: "background-color 0.3s ease",
         }}
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#333")}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#111")}
       >
-        {isLogin ? "Sign In" : "Create Account"}
+        {loading
+          ? isLogin
+            ? "Signing In..."
+            : "Sending OTP..."
+          : isLogin
+          ? "Sign In"
+          : "Create Account"}
       </button>
     </form>
   );
 };
 
 const Input = ({ icon, rightIcon, type, placeholder, value, onChange }) => (
-  <div
-    style={{
-      position: "relative",
-      marginBottom: "1rem",
-    }}
-  >
+  <div style={{ position: "relative", marginBottom: "1rem" }}>
     <span
       style={{
         position: "absolute",

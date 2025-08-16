@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import axios from "axios";
+import PaymentGateway from "./PaymentGateway"; // Import the new component
 
 export default function Cart({ cartItems, setCartItems }) {
   const navigate = useNavigate();
+  const [showPaymentGateway, setShowPaymentGateway] = useState(false);
 
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity <= 0) {
@@ -29,16 +32,21 @@ export default function Cart({ cartItems, setCartItems }) {
   const tax = subtotal * 0.12;
   const total = subtotal + shipping + tax;
 
-  const handleCheckout = async () => {
+  const handleProceedToCheckout = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Please log in to proceed.");
       navigate("/login");
       return;
     }
+    setShowPaymentGateway(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    const token = localStorage.getItem("token");
     try {
       await axios.post(
-        "http://localhost:8000/api/orders/create",
+        "http://localhost:8000/api/orders/process-payment",
         {
           products: cartItems.map((item) => ({
             productId: item.id,
@@ -50,11 +58,13 @@ export default function Cart({ cartItems, setCartItems }) {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Purchase successful!");
+      alert("Purchase successful! A confirmation email has been sent.");
       setCartItems([]);
+      setShowPaymentGateway(false);
       navigate("/shop");
     } catch (err) {
-      alert(err.response?.data?.message || "Checkout failed.");
+      alert(err.response?.data?.message || "Checkout failed after payment.");
+      setShowPaymentGateway(false);
     }
   };
 
@@ -99,53 +109,62 @@ export default function Cart({ cartItems, setCartItems }) {
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: "#F8F8F8",
-        minHeight: "calc(100vh - 80px)",
-        padding: "4rem 2rem",
-      }}
-    >
+    <>
+      {showPaymentGateway && (
+        <PaymentGateway
+          total={total}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentCancel={() => setShowPaymentGateway(false)}
+        />
+      )}
       <div
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "3rem",
+          backgroundColor: "#F8F8F8",
+          minHeight: "calc(100vh - 80px)",
+          padding: "4rem 2rem",
         }}
       >
-        <div>
-          <h1 style={{ fontFamily: "'Lora', serif", marginBottom: "2rem" }}>
-            My Bag
-          </h1>
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-            }}
-          >
-            {cartItems.map((item, index) => (
-              <CartItem
-                key={item.id}
-                item={item}
-                updateQuantity={updateQuantity}
-                removeItem={removeItem}
-                isLast={index === cartItems.length - 1}
-              />
-            ))}
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr",
+            gap: "3rem",
+          }}
+        >
+          <div>
+            <h1 style={{ fontFamily: "'Lora', serif", marginBottom: "2rem" }}>
+              My Bag
+            </h1>
+            <div
+              style={{
+                backgroundColor: "white",
+                borderRadius: "8px",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+              }}
+            >
+              {cartItems.map((item, index) => (
+                <CartItem
+                  key={item.id}
+                  item={item}
+                  updateQuantity={updateQuantity}
+                  removeItem={removeItem}
+                  isLast={index === cartItems.length - 1}
+                />
+              ))}
+            </div>
           </div>
+          <OrderSummary
+            subtotal={subtotal}
+            shipping={shipping}
+            tax={tax}
+            total={total}
+            handleCheckout={handleProceedToCheckout}
+          />
         </div>
-        <OrderSummary
-          subtotal={subtotal}
-          shipping={shipping}
-          tax={tax}
-          total={total}
-          handleCheckout={handleCheckout}
-        />
       </div>
-    </div>
+    </>
   );
 }
 

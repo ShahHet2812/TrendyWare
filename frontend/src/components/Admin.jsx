@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Edit, Trash2, PlusCircle, LogOut, X } from "lucide-react";
 
-const API_BASE_URL = "http://localhost:8000/api/admin";
+const API_BASE_URL = "http://localhost:8000/api";
 
-const getApiEndpoint = (tab) =>
-  ({
-    products: `${API_BASE_URL}/products`,
-    fashionfests: `${API_BASE_URL}/fests`,
-    complaints: `${API_BASE_URL}/complaints`,
-  }[tab]);
+const getApiEndpoint = (tab) => {
+  switch (tab) {
+    case "products":
+      return `${API_BASE_URL}/products`;
+    case "fashionfests":
+      return `${API_BASE_URL}/fests`;
+    case "complaints":
+      return `${API_BASE_URL}/admin/complaints`;
+    default:
+      return API_BASE_URL;
+  }
+};
 
 export default function Admin({ handleLogout }) {
   const [activeTab, setActiveTab] = useState("products");
@@ -114,7 +120,7 @@ export default function Admin({ handleLogout }) {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${API_BASE_URL}/complaints/${id}`,
+        `${API_BASE_URL}/admin/complaints/${id}`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -515,7 +521,6 @@ const FormDrawer = ({
           key !== "updatedAt"
       )
       .map((key) => {
-        // FIX: This logic now correctly handles different data types
         let value = item[key];
         if (
           (key === "startDate" || key === "endDate") &&

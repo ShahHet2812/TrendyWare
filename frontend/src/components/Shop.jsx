@@ -275,9 +275,8 @@ export default function Shop({
   useEffect(() => {
     const fetchAdminProducts = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/admin-products"
-        );
+        // FIX: Points to the correct public product route
+        const response = await axios.get("http://localhost:8000/api/products");
         setAdminProducts(response.data);
       } catch (error) {
         console.error("Failed to fetch admin products:", error);
@@ -378,7 +377,7 @@ export default function Shop({
               fontFamily: "'Lora', serif",
               fontSize: "1.25rem",
               marginBottom: "0.5rem",
-              minHeight: "48px", // To prevent layout shift
+              minHeight: "48px",
             }}
           >
             {productName}

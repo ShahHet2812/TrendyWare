@@ -29,10 +29,10 @@ logger.info("Loading product metadata from CSVs...")
 try:
     # Adjusted path to be relative to Django's BASE_DIR for better portability
     styles_path = os.path.join(
-        settings.BASE_DIR, "datasets", "myntradataset", "styles.csv"
+        settings.BASE_DIR, "dataset", "styles.csv"
     )
     prices_path = os.path.join(
-        settings.BASE_DIR, "datasets", "myntradataset", "clothing_prices.csv"
+        settings.BASE_DIR, "dataset", "clothing_prices.csv"
     )
 
     styles_df = pd.read_csv(styles_path, on_bad_lines="skip")
