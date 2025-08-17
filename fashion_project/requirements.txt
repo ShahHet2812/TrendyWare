@@ -1,13 +1,23 @@
+# Production-ready requirements
+
+# Core Django and API
 Django
 djangorestframework
 Pillow
+
+# For Production Server
+gunicorn
+whitenoise
+django-cors-headers
+dj-database-url
+
+# Your ML & Data Libraries
 serpapi
 fashion-clip
 insightface
 opencv-python
 numpy
 torch
-streamlit
 requests
 python-dotenv
 onnxruntime

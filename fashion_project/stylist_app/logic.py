@@ -27,12 +27,12 @@ except Exception as e:
 
 logger.info("Loading product metadata from CSVs...")
 try:
-    # Adjusted path to be relative to Django's BASE_DIR for better portability
+    # MODIFIED: Paths now point to the Render Disk directory defined in settings.py
     styles_path = os.path.join(
-        settings.BASE_DIR, "dataset", "styles.csv"
+        settings.DATASET_DIR, "styles.csv"
     )
     prices_path = os.path.join(
-        settings.BASE_DIR, "dataset", "clothing_prices.csv"
+        settings.DATASET_DIR, "clothing_prices.csv"
     )
 
     styles_df = pd.read_csv(styles_path, on_bad_lines="skip")
@@ -117,7 +117,7 @@ def infer_age_group(age):
         return "senior"
 
 
-# --- CORRECTED RECOMMENDATION LOGIC ---
+# --- RECOMMENDATION LOGIC with CORRECTED PATHS ---
 
 
 def get_recommendations(uploaded_file, season, usage):
@@ -129,12 +129,13 @@ def get_recommendations(uploaded_file, season, usage):
         image_pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         image_bgr = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
 
-        # --- Load Cached Data ---
+        # --- Load Cached Data from Render Disk ---
+        # MODIFIED: Paths now point to the Render Disk directory
         features_path = os.path.join(
-            settings.BASE_DIR, "stylist_app", "pkl", "cached_image_features.pkl"
+            settings.PKL_DIR, "cached_image_features.pkl"
         )
         catalog_path = os.path.join(
-            settings.BASE_DIR, "stylist_app", "pkl", "cached_catalog.pkl"
+            settings.PKL_DIR, "cached_catalog.pkl"
         )
         with open(features_path, "rb") as f:
             features = pickle.load(f)
