@@ -8,15 +8,17 @@ require("dotenv").config();
 
 const app = express();
 const PORT = 8000;
-const JWT_SECRET = "your-super-secret-key-that-is-long-and-secure";
+const JWT_SECRET = process.env.JWT_SECRET;
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 mongoose
-  .connect(
-    "mongodb+srv://shahhet28122004:shahhet28@trendyware.quuxjzz.mongodb.net/?retryWrites=true&w=majority&appName=trendyware"
-  )
+  .connect(process.env.DATABASE_URL)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
